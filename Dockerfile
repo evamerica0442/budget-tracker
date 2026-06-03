@@ -36,7 +36,7 @@ COPY --from=frontend-build --chown=node:node /app/build ./public
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Create nginx directories
-RUN mkdir -p /var/run/nginx /var/log/nginx && \
+RUN mkdir -p /var/run/nginx /var/log/nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/run/nginx /var/log/nginx /var/cache/nginx
 
 # Expose Render's required port
