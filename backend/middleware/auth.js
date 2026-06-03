@@ -8,24 +8,9 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    let decodedToken;
-    
-    try {
-      // Try to verify as ID token first
-      console.log('🔐 Attempting to verify as ID token...');
-      decodedToken = await auth.verifyIdToken(token);
-      console.log('✅ ID token verified for user:', decodedToken.uid);
-    } catch (idTokenError) {
-      // If ID token fails, try to verify as custom token
-      console.log('🔄 ID token verification failed, trying custom token...');
-      try {
-        decodedToken = await auth.verifyCustomToken(token);
-        console.log('✅ Custom token verified for user:', decodedToken.uid);
-      } catch (customTokenError) {
-        console.error('❌ Token verification failed - ID token:', idTokenError.message, '- Custom token:', customTokenError.message);
-        return res.status(401).json({ error: 'Invalid or expired token' });
-      }
-    }
+    console.log('🔐 Attempting to verify ID token...');
+    const decodedToken = await auth.verifyIdToken(token);
+    console.log('✅ ID token verified for user:', decodedToken.uid);
 
     req.userId = decodedToken.uid;
     req.userEmail = decodedToken.email || decodedToken.claims?.email;
@@ -33,7 +18,11 @@ const authMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('❌ Auth middleware error:', error.message);
-    res.status(401).json({ error: 'Authentication failed' });
+    const isCustomToken = error.message.includes('expects an ID token, but was given a custom token');
+    res.status(401).json({ 
+      error: isCustomToken ? 'Sent Custom Token instead of ID Token' : 'Authentication failed',
+      details: isCustomToken ? 'The frontend must sign in with the custom token via the Firebase Client SDK to retrieve a valid ID Token.' : error.message
+    });
   }
 };
 

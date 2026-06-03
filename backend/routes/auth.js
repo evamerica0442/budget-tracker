@@ -136,31 +136,4 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Token exchange endpoint - exchange custom token for ID token
-router.post('/exchange-token', async (req, res) => {
-  try {
-    const { customToken } = req.body;
-
-    if (!customToken) {
-      return res.status(400).json({ error: 'Custom token is required' });
-    }
-
-    // Verify the custom token
-    const decodedToken = await auth.verifyCustomToken(customToken);
-
-    // For security, we're returning the custom token as-is since it's already verified
-    // In a production setup, you would exchange this for an ID token using Firebase REST API
-    // But for now, the frontend can use this custom token with our updated auth middleware
-    
-    res.json({
-      token: customToken,
-      uid: decodedToken.uid,
-      message: 'Token verified successfully',
-    });
-  } catch (error) {
-    console.error('Token exchange error:', error);
-    res.status(401).json({ error: 'Token exchange failed: ' + error.message });
-  }
-});
-
 export default router;
