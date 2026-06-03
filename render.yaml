@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: budget-tracker
+    runtime: docker
+    plan: free
+    region: ohio
+    
+    # Environment variables are available at both build and runtime
+    envVars:
+      - key: REACT_APP_API_BASE_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      - key: FIREBASE_SERVICE_ACCOUNT_KEY
+        sync: false
+    
+    # Health check
+    healthCheckPath: /api/health
+    healthCheckInterval: 30
+    
+    # Auto-deploy from GitHub
+    autoDeploy: true

@@ -4,9 +4,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-ARG REACT_APP_API_BASE_URL
+# Set default if not provided, but Render should pass it as build argument
+ARG REACT_APP_API_BASE_URL=https://budget-tracker-vcm6.onrender.com/api
 ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
-RUN CI=false npm run build
+RUN echo "Building React app with API_BASE_URL: $REACT_APP_API_BASE_URL" && \
+    CI=false npm run build && \
+    ls -la build/ || echo "Build folder not found!"
 
 # Stage 2: Install backend dependencies
 FROM node:18-alpine AS backend-deps
@@ -32,6 +35,12 @@ COPY --chown=node:node backend ./backend
 # Copy frontend build
 COPY --from=frontend-build --chown=node:node /app/build ./public
 
+# Verify build artifacts exist
+RUN echo "🔍 Verifying build artifacts..." && \
+    if [ -d "/app/public" ]; then echo "✅ Frontend build exists"; ls -la /app/public | head -5; else echo "❌ FRONTEND BUILD MISSING!"; fi && \
+    if [ -d "/app/backend" ]; then echo "✅ Backend exists"; else echo "❌ BACKEND MISSING!"; fi && \
+    if [ -f "/app/backend/server.js" ]; then echo "✅ server.js exists"; else echo "❌ server.js MISSING!"; fi
+
 # Copy nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
 
@@ -46,4 +55,4 @@ EXPOSE 10000
 ENTRYPOINT ["/sbin/tini", "--"]
 
 # Start both services: backend on 5000, nginx on 10000
-CMD ["sh", "-c", "cd /app/backend && node server.js & nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "echo '🚀 Starting Budget Tracker on Render...' && cd /app/backend && node server.js & sleep 2 && echo '🌐 Starting Nginx...' && nginx -g 'daemon off;'"]
