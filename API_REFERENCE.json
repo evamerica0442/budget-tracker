@@ -1,0 +1,343 @@
+{
+  "info": {
+    "name": "Budget Tracker API",
+    "description": "Complete API reference for Budget Tracker",
+    "version": "1.0.0"
+  },
+  "endpoints": {
+    "health": {
+      "method": "GET",
+      "url": "http://localhost:5000/api/health",
+      "description": "Check API health status",
+      "response": {
+        "status": "OK",
+        "message": "Budget Tracker API is running"
+      }
+    },
+    "transactions": {
+      "list": {
+        "method": "GET",
+        "url": "http://localhost:5000/api/transactions",
+        "description": "Get all transactions",
+        "query_params": {
+          "type": "income | expense (optional)",
+          "category": "category name (optional)",
+          "startDate": "YYYY-MM-DD (optional)",
+          "endDate": "YYYY-MM-DD (optional)"
+        },
+        "example": "http://localhost:5000/api/transactions?type=expense&startDate=2024-01-01",
+        "response": [
+          {
+            "id": "uuid",
+            "type": "income | expense",
+            "amount": 1000,
+            "description": "Monthly salary",
+            "category": "Salary",
+            "date": "2024-05-01",
+            "createdAt": "2024-05-01T10:00:00Z",
+            "updatedAt": "2024-05-01T10:00:00Z"
+          }
+        ]
+      },
+      "get": {
+        "method": "GET",
+        "url": "http://localhost:5000/api/transactions/:id",
+        "description": "Get single transaction",
+        "url_params": {
+          "id": "transaction ID"
+        },
+        "response": {
+          "id": "uuid",
+          "type": "expense",
+          "amount": 250.50,
+          "description": "Grocery shopping",
+          "category": "Groceries",
+          "date": "2024-05-15",
+          "createdAt": "2024-05-15T14:30:00Z",
+          "updatedAt": "2024-05-15T14:30:00Z"
+        }
+      },
+      "create": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/transactions",
+        "description": "Create new transaction",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "type": "expense",
+          "amount": 250.50,
+          "description": "Grocery shopping",
+          "category": "Groceries",
+          "date": "2024-05-15"
+        },
+        "response": {
+          "id": "uuid-generated",
+          "type": "expense",
+          "amount": 250.50,
+          "description": "Grocery shopping",
+          "category": "Groceries",
+          "date": "2024-05-15",
+          "createdAt": "2024-05-15T14:30:00Z",
+          "updatedAt": "2024-05-15T14:30:00Z"
+        }
+      },
+      "update": {
+        "method": "PUT",
+        "url": "http://localhost:5000/api/transactions/:id",
+        "description": "Update transaction",
+        "url_params": {
+          "id": "transaction ID"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "amount": 275.50,
+          "description": "Grocery shopping - updated"
+        },
+        "response": {
+          "id": "uuid",
+          "type": "expense",
+          "amount": 275.50,
+          "description": "Grocery shopping - updated",
+          "category": "Groceries",
+          "date": "2024-05-15",
+          "createdAt": "2024-05-15T14:30:00Z",
+          "updatedAt": "2024-05-15T15:00:00Z"
+        }
+      },
+      "delete": {
+        "method": "DELETE",
+        "url": "http://localhost:5000/api/transactions/:id",
+        "description": "Delete transaction",
+        "url_params": {
+          "id": "transaction ID"
+        },
+        "response": {
+          "message": "Transaction deleted",
+          "transaction": {
+            "id": "uuid",
+            "type": "expense",
+            "amount": 250.50,
+            "description": "Grocery shopping",
+            "category": "Groceries",
+            "date": "2024-05-15"
+          }
+        }
+      },
+      "summary": {
+        "method": "GET",
+        "url": "http://localhost:5000/api/transactions/summary/:year/:month",
+        "description": "Get monthly summary",
+        "url_params": {
+          "year": "2024",
+          "month": "5"
+        },
+        "response": {
+          "month": "5",
+          "year": "2024",
+          "income": 5000,
+          "expenses": 1500,
+          "balance": 3500,
+          "transactionCount": 15
+        }
+      },
+      "bulk_import": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/transactions/bulk/import",
+        "description": "Bulk import transactions",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "transactions": [
+            {
+              "type": "income",
+              "amount": 5000,
+              "description": "Monthly salary",
+              "category": "Salary",
+              "date": "2024-05-01"
+            },
+            {
+              "type": "expense",
+              "amount": 250,
+              "description": "Groceries",
+              "category": "Groceries",
+              "date": "2024-05-05"
+            }
+          ]
+        },
+        "response": {
+          "created": 2,
+          "transactions": []
+        }
+      }
+    },
+    "categories": {
+      "list": {
+        "method": "GET",
+        "url": "http://localhost:5000/api/categories",
+        "description": "Get all categories",
+        "query_params": {
+          "type": "income | expense (optional)"
+        },
+        "response": [
+          {
+            "id": "uuid",
+            "name": "salary",
+            "displayName": "Salary",
+            "type": "income",
+            "color": "#27ae60",
+            "createdAt": "2024-05-01T10:00:00Z",
+            "updatedAt": "2024-05-01T10:00:00Z"
+          }
+        ]
+      },
+      "get": {
+        "method": "GET",
+        "url": "http://localhost:5000/api/categories/:id",
+        "description": "Get single category",
+        "url_params": {
+          "id": "category ID"
+        },
+        "response": {
+          "id": "uuid",
+          "name": "groceries",
+          "displayName": "Groceries",
+          "type": "expense",
+          "color": "#e74c3c",
+          "createdAt": "2024-05-01T10:00:00Z",
+          "updatedAt": "2024-05-01T10:00:00Z"
+        }
+      },
+      "create": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/categories",
+        "description": "Create new category",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "entertainment",
+          "displayName": "Entertainment",
+          "type": "expense",
+          "color": "#f39c12"
+        },
+        "response": {
+          "id": "uuid-generated",
+          "name": "entertainment",
+          "displayName": "Entertainment",
+          "type": "expense",
+          "color": "#f39c12",
+          "createdAt": "2024-05-01T10:00:00Z",
+          "updatedAt": "2024-05-01T10:00:00Z"
+        }
+      },
+      "update": {
+        "method": "PUT",
+        "url": "http://localhost:5000/api/categories/:id",
+        "description": "Update category",
+        "url_params": {
+          "id": "category ID"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "displayName": "Entertainment & Leisure",
+          "color": "#e74c3c"
+        },
+        "response": {
+          "id": "uuid",
+          "name": "entertainment",
+          "displayName": "Entertainment & Leisure",
+          "type": "expense",
+          "color": "#e74c3c",
+          "createdAt": "2024-05-01T10:00:00Z",
+          "updatedAt": "2024-05-01T11:00:00Z"
+        }
+      },
+      "delete": {
+        "method": "DELETE",
+        "url": "http://localhost:5000/api/categories/:id",
+        "description": "Delete category",
+        "url_params": {
+          "id": "category ID"
+        },
+        "response": {
+          "message": "Category deleted",
+          "category": {
+            "id": "uuid",
+            "name": "entertainment",
+            "displayName": "Entertainment",
+            "type": "expense",
+            "color": "#f39c12"
+          }
+        }
+      },
+      "bulk_seed": {
+        "method": "POST",
+        "url": "http://localhost:5000/api/categories/bulk/seed",
+        "description": "Bulk seed default categories (only works if database is empty)",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "categories": [
+            {
+              "name": "salary",
+              "displayName": "Salary",
+              "type": "income",
+              "color": "#27ae60"
+            }
+          ]
+        },
+        "response": {
+          "created": 1,
+          "categories": []
+        }
+      }
+    }
+  },
+  "error_responses": {
+    "validation_error": {
+      "status": 400,
+      "body": {
+        "error": "Validation Error",
+        "details": ["Missing required field: amount"]
+      }
+    },
+    "duplicate_error": {
+      "status": 400,
+      "body": {
+        "error": "name already exists"
+      }
+    },
+    "not_found": {
+      "status": 404,
+      "body": {
+        "error": "Transaction not found"
+      }
+    },
+    "server_error": {
+      "status": 500,
+      "body": {
+        "error": "Internal Server Error",
+        "statusCode": 500
+      }
+    }
+  },
+  "examples": {
+    "curl": {
+      "get_all_transactions": "curl http://localhost:5000/api/transactions",
+      "create_transaction": "curl -X POST http://localhost:5000/api/transactions -H \"Content-Type: application/json\" -d '{\"type\":\"expense\",\"amount\":250,\"description\":\"Groceries\",\"category\":\"Groceries\",\"date\":\"2024-05-15\"}'",
+      "get_categories": "curl http://localhost:5000/api/categories?type=expense",
+      "check_health": "curl http://localhost:5000/api/health"
+    },
+    "javascript": {
+      "get_transactions": "fetch('http://localhost:5000/api/transactions').then(r => r.json())",
+      "create_transaction": "fetch('http://localhost:5000/api/transactions', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({type: 'expense', amount: 250, description: 'Groceries', category: 'Groceries', date: '2024-05-15'})})"
+    }
+  }
+}
