@@ -106,8 +106,13 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const { type, amount, description, category, date } = req.body;
+    const userId = req.userId;
+
+    console.log('📝 Creating transaction for user:', userId);
+    console.log('📦 Transaction data:', { type, amount, description, category, date });
 
     if (!type || !amount || !description || !category) {
+      console.warn('❌ Validation error: Missing fields', { type, amount, description, category });
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -120,14 +125,17 @@ router.post('/', async (req, res, next) => {
       createdAt: new Date().toISOString()
     };
 
+    console.log('💾 Saving to Firestore...');
     const docRef = await db
       .collection('users')
-      .doc(req.userId)
+      .doc(userId)
       .collection('transactions')
       .add(transaction);
 
+    console.log('✅ Transaction saved successfully with ID:', docRef.id);
     res.status(201).json({ id: docRef.id, ...transaction });
   } catch (err) {
+    console.error('❌ Error creating transaction:', err);
     next(err);
   }
 });
