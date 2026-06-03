@@ -16,8 +16,9 @@ dotenv.config();
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const buildPath = path.join(__dirname, '..', 'build');
-const PORT = process.env.PORT || 5000;
+// Dockerfile copies frontend build to /app/public
+const buildPath = path.join(__dirname, '..', 'public');
+const PORT = 5000; // Hardcode to 5000 so Nginx can use 10000
 
 // Log startup info
 console.log('🚀 Starting Budget Tracker Backend...');
@@ -66,7 +67,7 @@ app.use('/api/transactions', auth, transactionRoutes);
 app.use('/api/categories', auth, categoryRoutes);
 
 // Serve static files from the React app build folder
-app.use(express.static(buildPath, { index: false }));
+app.use(express.static(buildPath));
 
 // The "catchall" handler: for any request that doesn't match one above, send back React's index.html file.
 app.get('*', (req, res) => {
@@ -75,11 +76,7 @@ app.get('*', (req, res) => {
   }
   
   const indexPath = path.join(buildPath, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('Frontend build not found. Please check deployment logs.');
-  }
+  res.sendFile(indexPath);
 });
 
 // 404 handler
