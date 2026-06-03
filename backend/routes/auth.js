@@ -102,27 +102,40 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-      // Note: Firebase Admin SDK doesn't have a direct password verification method
-      // The proper way is to use the Firebase REST API or client SDK for password verification
-      // For now, we create a custom token which the frontend will exchange for an ID token
-      
-      const userRecord = await auth.getUserByEmail(email);
-      
-      // Create custom token for login
-      const customToken = await auth.createCustomToken(userRecord.uid);
+      // Use Firebase REST API to verify password and get an ID Token
+      // Note: 'fetch' is available globally in Node.js 18+
+      const apiKey = process.env.FIREBASE_API_KEY;
+      if (!apiKey) {
+        throw new Error('Backend FIREBASE_API_KEY environment variable is not set');
+      }
+
+      const signInResponse = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, returnSecureToken: true }),
+        }
+      );
+
+      const signInData = await signInResponse.json();
+
+      if (!signInResponse.ok) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
 
       // Get user profile from Firestore
-      const userDoc = await db.collection('users').doc(userRecord.uid).get();
+      const userDoc = await db.collection('users').doc(signInData.localId).get();
       const userData = userDoc.data();
 
       res.json({
         user: {
-          id: userRecord.uid,
+          id: signInData.localId,
           name: userData?.name || userRecord.displayName,
-          email: userRecord.email,
+          email: signInData.email,
         },
-        token: customToken,
-        message: 'Login successful. Use this token to exchange for an ID token via Firebase Client SDK.',
+        token: signInData.idToken, // This is now a valid ID Token
+        message: 'Login successful',
       });
     } catch (error) {
       if (error.code === 'auth/user-not-found') {
