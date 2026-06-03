@@ -131,7 +131,7 @@ router.post('/login', async (req, res) => {
       res.json({
         user: {
           id: signInData.localId,
-          name: userData?.name || userRecord.displayName,
+          name: userData?.name || 'User',
           email: signInData.email,
         },
         token: signInData.idToken, // This is now a valid ID Token
