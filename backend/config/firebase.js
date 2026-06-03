@@ -14,7 +14,11 @@ try {
     throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set');
   }
 
-  serviceAccountKey = JSON.parse(keyString);
+  const parsedKey = JSON.parse(keyString);
+  serviceAccountKey = {
+    ...parsedKey,
+    private_key: parsedKey.private_key?.replace(/\\n/g, '\n')
+  };
   console.log('✅ Service account key parsed successfully');
 } catch (parseError) {
   console.error('❌ Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', parseError.message);
@@ -37,7 +41,15 @@ if (serviceAccountKey) {
   console.warn('⚠️  Firebase not initialized - operations will fail');
 }
 
-export const db = admin.firestore();
-export const auth = admin.auth();
+// Use getters to prevent errors if initialized app is missing
+export const db = serviceAccountKey ? admin.firestore() : null;
+export const auth = serviceAccountKey ? admin.auth() : null;
+
+if (db) {
+  // Set settings for Firestore
+  db.settings({
+    ignoreUndefinedProperties: true // Prevents crashes on empty fields
+  });
+}
 
 export default admin;

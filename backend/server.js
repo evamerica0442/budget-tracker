@@ -47,6 +47,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Add this helper to check Firebase status
+app.get('/api/debug-firebase', (req, res) => {
+  res.json({
+    initialized: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+    dbAvailable: !!transactionRoutes,
+    env: process.env.NODE_ENV
+  });
+});
+
 app.use(cors({
   origin: true, // Reflects the request origin, safer for debugging same-domain proxying
   credentials: true
