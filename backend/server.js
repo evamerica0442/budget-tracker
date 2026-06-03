@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import dotenv from 'dotenv';
 import './config/firebase.js'; // Initialize Firebase
 import transactionRoutes from './routes/transactions.js';
@@ -11,6 +12,7 @@ import auth from './middleware/auth.js';
 dotenv.config();
 
 const app = express();
+const __dirname = path.resolve();
 const PORT = process.env.PORT || 5000;
 
 // Log startup info
@@ -51,6 +53,15 @@ app.get('/api/diagnostics', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', auth, transactionRoutes);
 app.use('/api/categories', auth, categoryRoutes);
+
+// Serve static files from the React app build folder
+app.use(express.static(path.join(__dirname, 'build')));
+
+// The "catchall" handler: for any request that doesn't match one above, send back React's index.html file.
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 // Error handling middleware
 app.use(errorHandler);
