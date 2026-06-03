@@ -35,8 +35,20 @@ if (fs.existsSync(buildPath)) {
 
 // Middleware
 app.use(express.json());
+
+// Request Logging Middleware
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    console.log(`📡 ${req.method} ${req.url}`);
+    if (['POST', 'PUT'].includes(req.method)) {
+      console.log('📦 Payload:', JSON.stringify(req.body, null, 2));
+    }
+  }
+  next();
+});
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: true, // Reflects the request origin, safer for debugging same-domain proxying
   credentials: true
 }));
 
