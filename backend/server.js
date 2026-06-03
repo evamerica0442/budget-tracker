@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import './config/firebase.js'; // Initialize Firebase
@@ -23,6 +24,13 @@ console.log('🚀 Starting Budget Tracker Backend...');
 console.log('📍 PORT:', PORT);
 console.log('🌍 CORS_ORIGIN:', process.env.CORS_ORIGIN || 'Not set (will use default)');
 console.log('🔑 Firebase Key Set:', process.env.FIREBASE_SERVICE_ACCOUNT_KEY ? 'Yes' : 'No');
+console.log('📂 Build Path:', buildPath);
+
+if (fs.existsSync(buildPath)) {
+  console.log('✅ Build directory found');
+} else {
+  console.error('❌ Build directory NOT found at:', buildPath);
+}
 
 // Middleware
 app.use(express.json());
@@ -58,22 +66,30 @@ app.use('/api/transactions', auth, transactionRoutes);
 app.use('/api/categories', auth, categoryRoutes);
 
 // Serve static files from the React app build folder
-app.use(express.static(buildPath));
+app.use(express.static(buildPath, { index: false }));
 
 // The "catchall" handler: for any request that doesn't match one above, send back React's index.html file.
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
-  res.sendFile(path.join(buildPath, 'index.html'));
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  const indexPath = path.join(buildPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Frontend build not found. Please check deployment logs.');
+  }
 });
-
-// Error handling middleware
-app.use(errorHandler);
 
 // 404 handler
 app.use((req, res) => {
   console.warn(`404 - ${req.method} ${req.path}`);
   res.status(404).json({ error: 'Endpoint not found', path: req.path, method: req.method });
 });
+
+// Error handling middleware - MUST BE LAST
+app.use(errorHandler);
 
 // Start server
 const server = app.listen(PORT, () => {
