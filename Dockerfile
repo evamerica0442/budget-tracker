@@ -2,14 +2,20 @@
 FROM node:18-alpine AS frontend-build
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps 2>&1 | tail -5
 COPY . .
 # Set default if not provided, but Render should pass it as build argument
 ARG REACT_APP_API_BASE_URL=https://budget-tracker-vcm6.onrender.com/api
 ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
-RUN echo "Building React app with API_BASE_URL: $REACT_APP_API_BASE_URL" && \
-    CI=false npm run build && \
-    ls -la build/ || echo "Build folder not found!"
+ENV CI=false
+RUN echo "🔨 Building React app..." && \
+    echo "   API_BASE_URL: $REACT_APP_API_BASE_URL" && \
+    npm run build 2>&1 && \
+    echo "✅ Build completed" && \
+    echo "📁 Build directory contents:" && \
+    ls -lah build/ 2>&1 | head -15 && \
+    echo "📄 Checking for index.html:" && \
+    if [ -f build/index.html ]; then echo "✅ index.html found ($(wc -c < build/index.html) bytes)"; else echo "❌ CRITICAL: index.html NOT FOUND!"; exit 1; fi
 
 # Stage 2: Install backend dependencies
 FROM node:18-alpine AS backend-deps
@@ -37,8 +43,16 @@ COPY --from=frontend-build --chown=node:node /app/build ./public
 
 # Verify build artifacts exist
 RUN echo "🔍 Verifying build artifacts..." && \
-    if [ -d "/app/public" ]; then echo "✅ Frontend build exists"; ls -la /app/public | head -5; else echo "❌ FRONTEND BUILD MISSING!"; fi && \
-    if [ -d "/app/backend" ]; then echo "✅ Backend exists"; else echo "❌ BACKEND MISSING!"; fi && \
+    if [ -d "/app/public" ] && [ -f "/app/public/index.html" ]; then \
+        echo "✅ Frontend build copied successfully"; \
+        echo "   index.html: $(wc -c < /app/public/index.html) bytes"; \
+        ls -lah /app/public | head -8; \
+    else \
+        echo "❌ CRITICAL: Frontend build not found!"; \
+        echo "   Public dir: $(ls -la /app/public 2>&1 || echo 'NOT FOUND')"; \
+        exit 1; \
+    fi && \
+    if [ -d "/app/backend" ]; then echo "✅ Backend exists"; else echo "❌ Backend MISSING!"; fi && \
     if [ -f "/app/backend/server.js" ]; then echo "✅ server.js exists"; else echo "❌ server.js MISSING!"; fi
 
 # Copy nginx config
@@ -55,4 +69,27 @@ EXPOSE 10000
 ENTRYPOINT ["/sbin/tini", "--"]
 
 # Start both services: backend on 5000, nginx on 10000
-CMD ["sh", "-c", "echo '🚀 Starting Budget Tracker on Render...' && cd /app/backend && node server.js & sleep 2 && echo '🌐 Starting Nginx...' && nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "\
+  echo '════════════════════════════════════════'; \
+  echo '🚀 Starting Budget Tracker Server'; \
+  echo '════════════════════════════════════════'; \
+  echo '📊 Configuration:'; \
+  echo \"   API Base URL: $REACT_APP_API_BASE_URL\"; \
+  echo \"   CORS Origin: $CORS_ORIGIN\"; \
+  echo \"   Environment: $NODE_ENV\"; \
+  echo ''; \
+  echo '🔍 Pre-flight checks:'; \
+  test -f /app/public/index.html && echo '✅ Frontend: index.html found' || (echo '❌ Frontend: index.html NOT found!'; exit 1); \
+  test -f /app/backend/server.js && echo '✅ Backend: server.js found' || (echo '❌ Backend: server.js NOT found!'; exit 1); \
+  test -f /etc/nginx/nginx.conf && echo '✅ Nginx: config found' || (echo '❌ Nginx: config NOT found!'; exit 1); \
+  echo ''; \
+  echo '▶️  Starting services...'; \
+  echo '   Backend: listening on :5000'; \
+  echo '   Frontend: listening on :10000'; \
+  echo ''; \
+  cd /app/backend && node server.js & \
+  BACKEND_PID=$$!; \
+  sleep 3; \
+  echo '🌐 Starting Nginx...'; \
+  nginx -g 'daemon off;'\
+"]
