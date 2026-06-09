@@ -1,0 +1,252 @@
+/* Cash Flow Simulation Styles */
+
+.cash-flow-sim-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.cash-flow-sim-page .page-header {
+  margin-bottom: 2rem;
+}
+
+.cash-flow-sim-page .page-header h2 {
+  font-size: 2rem;
+  color: var(--text-primary, #2c3e50);
+  margin: 0 0 0.5rem 0;
+}
+
+.cash-flow-sim-page .subtitle {
+  color: var(--text-secondary, #7f8c8d);
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+/* Grid Layout */
+.sim-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 2rem;
+}
+
+/* Left & Right panels */
+.sim-inputs-panel, .sim-results-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Card Styling */
+.sim-card {
+  background: var(--card-bg, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  border: 1px solid var(--border-color, #f0f0f0);
+}
+
+.sim-card h3 {
+  margin: 0 0 1.25rem 0;
+  font-size: 1.15rem;
+  color: var(--text-primary, #2c3e50);
+  border-bottom: 2px solid var(--border-color, #f5f5f5);
+  padding-bottom: 0.5rem;
+}
+
+.card-header-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid var(--border-color, #f5f5f5);
+  padding-bottom: 0.5rem;
+}
+
+.card-header-with-action h3 {
+  margin: 0;
+  border: none;
+  padding: 0;
+}
+
+/* Debt items list */
+.debts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.debt-input-row {
+  border-left: 4px solid #ccc;
+  padding-left: 1rem;
+  background: #fafafa;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.debt-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
+}
+
+.debt-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.btn-delete-small {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #e74c3c;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.btn-delete-small:hover {
+  color: #c0392b;
+}
+
+.form-row-three {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.no-debts {
+  text-align: center;
+  color: var(--text-secondary, #95a5a6);
+  padding: 1.5rem;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Indicators and Inputs */
+.input-with-indicator {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.input-with-indicator .form-control {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.input-with-indicator .addon {
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  background: #f1f2f6;
+  border: 1px solid var(--border-color, #ddd);
+  border-left: none;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #57606f);
+  font-weight: 600;
+}
+
+/* Results Section Insights */
+.insights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.insight-card {
+  background: var(--card-bg, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.25rem;
+  border: 1px solid var(--border-color, #f0f0f0);
+}
+
+.insight-card h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary, #7f8c8d);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.insight-comparison {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.comparison-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.comparison-item .label {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #95a5a6);
+  margin-bottom: 0.2rem;
+}
+
+.comparison-item .value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary, #2c3e50);
+}
+
+.comparison-item .value.positive {
+  color: #2ecc71;
+}
+
+.border-left {
+  border-left: 1px solid #ecf0f1;
+  padding-left: 1rem;
+}
+
+.insight-diff {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #57606f);
+  background: #f8f9fa;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+}
+
+.insight-diff strong {
+  color: #27ae60;
+}
+
+/* Chart block styling */
+.chart-card {
+  flex: 1;
+}
+
+.chart-wrapper {
+  margin-top: 1rem;
+}
+
+.chart-disclaimer {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #95a5a6);
+  text-align: center;
+  margin: 1rem 0 0 0;
+  line-height: 1.4;
+}
+
+/* Responsive adjustment */
+@media (max-width: 1024px) {
+  .sim-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-row-three {
+    grid-template-columns: 1fr;
+  }
+}

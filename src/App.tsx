@@ -11,6 +11,7 @@ import Transactions from './pages/Transactions';
 import Categories from './pages/Categories';
 import Envelopes from './pages/Envelopes';
 import SavingsGoals from './pages/SavingsGoals';
+import CashFlowSimulation from './pages/CashFlowSimulation';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -71,6 +72,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <SavingsGoals />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/simulation"
+                    element={
+                      <ProtectedRoute>
+                        <CashFlowSimulation />
                       </ProtectedRoute>
                     }
                   />
