@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useBudget } from '../context/BudgetContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { formatCurrency, formatMonthYear, formatDate } from '../utils/formatting';
+import SpendingAdvisor from '../components/SpendingAdvisor';
 import '../styles/Dashboard.css';
 
 const Dashboard: React.FC = () => {
@@ -209,8 +210,14 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* AI Spending Advisor Tips */}
+      <SpendingAdvisor 
+        transactions={state.transactions} 
+        month={`${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`} 
+      />
+
       {/* Recent Transactions */}
-      <div className="recent-transactions">
+      <div className="recent-transactions" style={{ marginTop: '1.5rem' }}>
         <h3>Recent Transactions</h3>
         <div className="transactions-list">
           {recentTransactions.length > 0 ? (

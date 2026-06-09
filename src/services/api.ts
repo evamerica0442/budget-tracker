@@ -213,5 +213,15 @@ export const savingsGoalAPI = {
  */
 export const healthCheck = () => apiCall('/health');
 
-const apiService = { transactionAPI, categoryAPI, envelopeAPI, savingsGoalAPI, healthCheck };
+/**
+ * AI Personal Tips API call
+ */
+export const aiAPI = {
+  getTips: (summary: any): Promise<{ tips: any[] }> => apiCall('/ai/tips', {
+    method: 'POST',
+    body: JSON.stringify({ summary }),
+  }),
+};
+
+const apiService = { transactionAPI, categoryAPI, envelopeAPI, savingsGoalAPI, aiAPI, healthCheck };
 export default apiService;

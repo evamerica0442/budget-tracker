@@ -1,0 +1,202 @@
+Here's a complete walkthrough for wiring the Anthropic API into my budget app to generate personalised tips.
+
+---
+
+## How it works
+
+My app already has all the data needed — transactions, category totals, income, and balance. You serialize that into a structured prompt, send it to the API, and stream the tips back into your UI. No backend needed; the API call happens client-side.
+
+---
+
+## 1. Build the spending summary payload
+
+Before calling the API, shape your localStorage data into a clean summary:
+
+```js
+function buildSpendingSummary(transactions, month) {
+  const monthTxns = transactions.filter(t => t.date.startsWith(month))
+
+  const byCategory = monthTxns
+    .filter(t => t.type === 'expense')
+    .reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + t.amount
+      return acc
+    }, {})
+
+  const totalIncome = monthTxns
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  const totalExpenses = Object.values(byCategory).reduce((a, b) => a + b, 0)
+
+  return {
+    month,
+    totalIncome,
+    totalExpenses,
+    balance: totalIncome - totalExpenses,
+    expenseRatio: Math.round((totalExpenses / totalIncome) * 100),
+    categories: byCategory   // { groceries: 5000, loan: 5900, ... }
+  }
+}
+```
+
+---
+
+## 2. The API call
+
+```js
+async function fetchSpendingTips(summary) {
+  const prompt = `
+You are a personal finance coach. Analyse this monthly budget data and return exactly 3 
+concise, actionable tips. Be specific — use the actual numbers. 
+Format your response as JSON: { "tips": [ { "title": "...", "detail": "...", "type": "warning|success|info" } ] }
+
+Budget data:
+- Month: ${summary.month}
+- Income: R${summary.totalIncome.toLocaleString()}
+- Expenses: R${summary.totalExpenses.toLocaleString()} (${summary.expenseRatio}% of income)
+- Balance: R${summary.balance.toLocaleString()}
+- Spending by category: ${JSON.stringify(summary.categories)}
+  `.trim()
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  })
+
+  const data = await response.json()
+  const text = data.content[0].text
+  const clean = text.replace(/```json|```/g, '').trim()
+  return JSON.parse(clean)   // { tips: [...] }
+}
+```
+
+---
+
+## 3. The React component
+
+```jsx
+import { useState } from 'react'
+
+const typeStyles = {
+  warning: { bg: '#2a2200', color: '#EF9F27', label: 'Watch out' },
+  success: { bg: '#0a2a1a', color: '#1D9E75', label: 'Doing well' },
+  info:    { bg: '#0a1a2a', color: '#378ADD', label: 'Tip'        }
+}
+
+function SpendingAdvisor({ transactions, month }) {
+  const [tips, setTips]       = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState(null)
+
+  async function handleAnalyse() {
+    setLoading(true)
+    setError(null)
+    try {
+      const summary = buildSpendingSummary(transactions, month)
+      const result  = await fetchSpendingTips(summary)
+      setTips(result.tips)
+    } catch (e) {
+      setError('Could not load tips — check your connection and try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h3 style={{ margin: 0 }}>AI spending advisor</h3>
+        <button onClick={handleAnalyse} disabled={loading}>
+          {loading ? 'Analysing…' : 'Analyse my spending'}
+        </button>
+      </div>
+
+      {error && <p style={{ color: '#E24B4A', fontSize: 14 }}>{error}</p>}
+
+      {tips.map((tip, i) => {
+        const s = typeStyles[tip.type] || typeStyles.info
+        return (
+          <div key={i} style={{
+            background: s.bg,
+            borderLeft: `3px solid ${s.color}`,
+            borderRadius: 8,
+            padding: '0.75rem 1rem',
+            marginTop: 12
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 500, color: s.color,
+                background: s.bg, border: `1px solid ${s.color}`,
+                borderRadius: 4, padding: '1px 6px'
+              }}>{s.label}</span>
+              <strong style={{ fontSize: 14 }}>{tip.title}</strong>
+            </div>
+            <p style={{ fontSize: 13, color: '#aaa', margin: 0 }}>{tip.detail}</p>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+```
+
+Drop `<SpendingAdvisor transactions={transactions} month="2026-06" />` anywhere on your dashboard.
+
+---
+
+## 4. Cache the result
+
+Don't call the API every render — tips don't change until new transactions come in:
+
+```js
+const CACHE_KEY = `tips_${month}`
+
+// Before calling the API, check cache
+const cached = localStorage.getItem(CACHE_KEY)
+if (cached) {
+  const { tips, generatedAt } = JSON.parse(cached)
+  const ageHours = (Date.now() - generatedAt) / 3_600_000
+  if (ageHours < 6) return setTips(tips)   // use cache if under 6 hours old
+}
+
+// After a successful call, store it
+localStorage.setItem(CACHE_KEY, JSON.stringify({
+  tips: result.tips,
+  generatedAt: Date.now()
+}))
+```
+
+---
+
+## 5. Make tips smarter over time
+
+Once the basic version works, enrich the prompt with more context:
+
+```js
+// Add last month's data for trend detection
+const lastMonthSummary = buildSpendingSummary(transactions, '2026-05')
+
+// Add to the prompt:
+`Last month's expenses: R${lastMonthSummary.totalExpenses.toLocaleString()}
+Category changes vs last month: ${JSON.stringify(categoryDeltas)}`
+```
+
+This lets Claude say things like *"Your entertainment spend jumped 40% vs May — consider a R500 cap"* instead of generic advice.
+
+---
+
+## What the output looks like in practice
+
+Given your current June data (R26 700 income, R20 100 expenses, 75.3% ratio), you'd get tips roughly like:
+
+- **Success** — Your expense ratio of 75.3% is within the healthy 80% threshold. Maintaining this leaves R6 600 as a buffer.
+- **Warning** — Entertainment (R4 000) is 15% of your income. The recommended ceiling is 10% — consider a R2 670 cap.
+- **Info** — Your loan repayments (R5 900) are fixed. Paying an extra R500/month would save significant interest over the loan term.
+
+The tips are grounded in your actual numbers, which makes them far more actionable than generic financial advice.
