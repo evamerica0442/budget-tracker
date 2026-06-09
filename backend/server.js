@@ -8,6 +8,7 @@ import './config/firebase.js'; // Initialize Firebase
 import transactionRoutes from './routes/transactions.js';
 import categoryRoutes from './routes/categories.js';
 import authRoutes from './routes/auth.js';
+import envelopeRoutes from './routes/envelopes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import auth from './middleware/auth.js';
 
@@ -86,6 +87,7 @@ app.get('/api/diagnostics', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', auth, transactionRoutes);
 app.use('/api/categories', auth, categoryRoutes);
+app.use('/api/envelopes', auth, envelopeRoutes);
 
 // Serve static files from the React app build folder
 app.use(express.static(buildPath));

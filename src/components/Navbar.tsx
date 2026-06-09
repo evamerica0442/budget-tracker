@@ -49,6 +49,7 @@ const Navbar: React.FC = () => {
     { path: '/', label: 'Dashboard' },
     { path: '/transactions', label: 'Transactions' },
     { path: '/categories', label: 'Categories' },
+    { path: '/envelopes', label: 'Envelopes' },
   ];
 
   // Hide navbar on auth pages

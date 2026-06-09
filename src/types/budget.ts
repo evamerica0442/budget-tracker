@@ -25,6 +25,22 @@ export interface Category {
   updatedAt?: string;
 }
 
+export interface Envelope {
+  id: string;
+  name: string;
+  budgetAmount: number;
+  currentAmount: number;
+  category?: string;
+  color: string;
+  period: 'monthly' | 'weekly' | 'yearly' | 'one-time';
+  startDate: string | Date;
+  endDate?: string | Date;
+  autoRefill: boolean;
+  user?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface User {
   id?: string;
   email: string;

@@ -2,7 +2,7 @@
  * Budget Tracker API Service
  * Handles all communication with the backend API
  */
-import { Transaction, Category } from '../types/budget';
+import { Transaction, Category, Envelope } from '../types/budget';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -127,9 +127,57 @@ export const categoryAPI = {
 };
 
 /**
+ * Envelope API calls
+ */
+export const envelopeAPI = {
+  // Get all envelopes
+  getAll: (period?: string): Promise<Envelope[]> => {
+    const query = period ? `?period=${period}` : '';
+    return apiCall<Envelope[]>(`/envelopes${query}`);
+  },
+
+  // Get single envelope
+  getById: (id: string): Promise<Envelope> => apiCall<Envelope>(`/envelopes/${id}`),
+
+  // Create envelope
+  create: (data: Omit<Envelope, 'id'>): Promise<Envelope> => apiCall<Envelope>('/envelopes', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // Update envelope
+  update: (id: string, data: Partial<Envelope>): Promise<Envelope> => apiCall<Envelope>(`/envelopes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+
+  // Delete envelope
+  delete: (id: string): Promise<void> => apiCall(`/envelopes/${id}`, {
+    method: 'DELETE',
+  }),
+
+  // Add funds to envelope
+  addFunds: (id: string, amount: number): Promise<Envelope> => apiCall<Envelope>(`/envelopes/${id}/add-funds`, {
+    method: 'POST',
+    body: JSON.stringify({ amount }),
+  }),
+
+  // Spend from envelope
+  spend: (id: string, amount: number): Promise<Envelope> => apiCall<Envelope>(`/envelopes/${id}/spend`, {
+    method: 'POST',
+    body: JSON.stringify({ amount }),
+  }),
+
+  // Refill envelope
+  refill: (id: string): Promise<Envelope> => apiCall<Envelope>(`/envelopes/${id}/refill`, {
+    method: 'POST',
+  }),
+};
+
+/**
  * Health check
  */
 export const healthCheck = () => apiCall('/health');
 
-const apiService = { transactionAPI, categoryAPI, healthCheck };
+const apiService = { transactionAPI, categoryAPI, envelopeAPI, healthCheck };
 export default apiService;

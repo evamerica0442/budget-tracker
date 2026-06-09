@@ -3,10 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider } from './context/ThemeContext';
 import { BudgetProvider } from './context/BudgetContext';
 import { AuthProvider } from './context/AuthContext';
+import { EnvelopeProvider } from './context/EnvelopeContext';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Categories from './pages/Categories';
+import Envelopes from './pages/Envelopes';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,7 +20,8 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <BudgetProvider>
-          <Router>
+          <EnvelopeProvider>
+            <Router>
             <div className="app-container">
               <Navbar />
               <main className="main-content">
@@ -52,6 +55,14 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  <Route
+                    path="/envelopes"
+                    element={
+                      <ProtectedRoute>
+                        <Envelopes />
+                      </ProtectedRoute>
+                    }
+                  />
                   
                   {/* Fallback */}
                   <Route path="*" element={<Navigate to="/" replace />} />
@@ -59,6 +70,7 @@ function App() {
               </main>
             </div>
           </Router>
+          </EnvelopeProvider>
         </BudgetProvider>
       </AuthProvider>
     </ThemeProvider>
