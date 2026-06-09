@@ -2,7 +2,7 @@
  * Budget Tracker API Service
  * Handles all communication with the backend API
  */
-import { Transaction, Category, Envelope } from '../types/budget';
+import { Transaction, Category, Envelope, SavingsGoal } from '../types/budget';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -175,9 +175,43 @@ export const envelopeAPI = {
 };
 
 /**
+ * Savings Goal API calls
+ */
+export const savingsGoalAPI = {
+  // Get all goals
+  getAll: (): Promise<SavingsGoal[]> => apiCall<SavingsGoal[]>('/savings-goals'),
+
+  // Get single goal
+  getById: (id: string): Promise<SavingsGoal> => apiCall<SavingsGoal>(`/savings-goals/${id}`),
+
+  // Create goal
+  create: (data: Omit<SavingsGoal, 'id'>): Promise<SavingsGoal> => apiCall<SavingsGoal>('/savings-goals', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // Update goal
+  update: (id: string, data: Partial<SavingsGoal>): Promise<SavingsGoal> => apiCall<SavingsGoal>(`/savings-goals/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+
+  // Delete goal
+  delete: (id: string): Promise<void> => apiCall(`/savings-goals/${id}`, {
+    method: 'DELETE',
+  }),
+
+  // Contribute/Earmark money
+  contribute: (id: string, amount: number): Promise<SavingsGoal> => apiCall<SavingsGoal>(`/savings-goals/${id}/contribute`, {
+    method: 'POST',
+    body: JSON.stringify({ amount }),
+  }),
+};
+
+/**
  * Health check
  */
 export const healthCheck = () => apiCall('/health');
 
-const apiService = { transactionAPI, categoryAPI, envelopeAPI, healthCheck };
+const apiService = { transactionAPI, categoryAPI, envelopeAPI, savingsGoalAPI, healthCheck };
 export default apiService;

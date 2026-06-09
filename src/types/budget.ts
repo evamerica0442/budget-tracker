@@ -41,6 +41,18 @@ export interface Envelope {
   updatedAt?: string;
 }
 
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline: string | Date;
+  color: string;
+  user?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface User {
   id?: string;
   email: string;

@@ -4,11 +4,13 @@ import { ThemeProvider } from './context/ThemeContext';
 import { BudgetProvider } from './context/BudgetContext';
 import { AuthProvider } from './context/AuthContext';
 import { EnvelopeProvider } from './context/EnvelopeContext';
+import { SavingsGoalProvider } from './context/SavingsGoalContext';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Categories from './pages/Categories';
 import Envelopes from './pages/Envelopes';
+import SavingsGoals from './pages/SavingsGoals';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -21,7 +23,8 @@ function App() {
       <AuthProvider>
         <BudgetProvider>
           <EnvelopeProvider>
-            <Router>
+            <SavingsGoalProvider>
+              <Router>
             <div className="app-container">
               <Navbar />
               <main className="main-content">
@@ -63,6 +66,14 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  <Route
+                    path="/savings"
+                    element={
+                      <ProtectedRoute>
+                        <SavingsGoals />
+                      </ProtectedRoute>
+                    }
+                  />
                   
                   {/* Fallback */}
                   <Route path="*" element={<Navigate to="/" replace />} />
@@ -70,6 +81,7 @@ function App() {
               </main>
             </div>
           </Router>
+            </SavingsGoalProvider>
           </EnvelopeProvider>
         </BudgetProvider>
       </AuthProvider>
