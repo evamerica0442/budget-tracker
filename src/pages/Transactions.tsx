@@ -263,9 +263,9 @@ const Transactions: React.FC = () => {
               <tbody>
                 {filteredTransactions.map(transaction => (
                   <tr key={transaction.id}>
-                    <td>{formatDate(transaction.date)}</td>
-                    <td>{transaction.description}</td>
-                    <td>
+                    <td data-label="Date">{formatDate(transaction.date)}</td>
+                    <td data-label="Description">{transaction.description}</td>
+                    <td data-label="Category">
                       <span 
                         className="category-badge"
                         style={{ 
@@ -276,25 +276,25 @@ const Transactions: React.FC = () => {
                         {transaction.category}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Type">
                       <span className={`type-badge ${transaction.type}`}>
                         {transaction.type}
                       </span>
                     </td>
-                    <td className={`amount ${transaction.type}`}>
+                    <td data-label="Amount" className={`amount ${transaction.type}`}>
                       {transaction.type === 'income' ? '+' : '-'}
                       {formatCurrency(transaction.amount)}
                     </td>
-                    <td className="actions">
+                    <td data-label="Actions" className="actions">
                       <button 
-                        className="btn btn-sm btn-edit"
+                        className="btn-icon"
                         onClick={() => handleEdit(transaction)}
                         title="Edit transaction"
                       >
                         ✏️
                       </button>
                       <button 
-                        className="btn btn-sm btn-delete"
+                        className="btn-icon"
                         onClick={() => handleDelete(transaction.id)}
                         title="Delete transaction"
                       >
