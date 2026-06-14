@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useBudget } from '../context/BudgetContext';
 import { formatCurrency, formatDate } from '../utils/formatting';
 import { Transaction } from '../types/budget';
@@ -12,6 +12,11 @@ interface TransactionFormData {
   date: string;
 }
 
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
 const Transactions: React.FC = () => {
   const { state, addTransaction, updateTransaction, deleteTransaction } = useBudget();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -24,9 +29,70 @@ const Transactions: React.FC = () => {
     date: new Date().toISOString().split('T')[0]
   });
 
-  const filteredTransactions = [...state.transactions].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  // ── Month/Year filter state ────────────────────────────────────────────
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth());
+
+  // ── Derive available years and months from transactions ────────────────
+  const availablePeriods = useMemo(() => {
+    const periods = new Map<string, { year: number; month: number; count: number }>();
+
+    state.transactions.forEach(t => {
+      const d = new Date(t.date);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const existing = periods.get(key);
+      if (existing) {
+        existing.count++;
+      } else {
+        periods.set(key, { year: d.getFullYear(), month: d.getMonth(), count: 1 });
+      }
+    });
+
+    return Array.from(periods.values()).sort((a, b) =>
+      b.year !== a.year ? b.year - a.year : b.month - a.month
+    );
+  }, [state.transactions]);
+
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    state.transactions.forEach(t => years.add(new Date(t.date).getFullYear()));
+    const sorted = Array.from(years).sort((a, b) => b - a);
+    if (!sorted.includes(now.getFullYear())) sorted.unshift(now.getFullYear());
+    return sorted;
+  }, [state.transactions, now]);
+
+  // ── Filter transactions by selected month/year ─────────────────────────
+  const filteredTransactions = useMemo(() => {
+    return state.transactions
+      .filter(t => {
+        const d = new Date(t.date);
+        return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [state.transactions, selectedMonth, selectedYear]);
+
+  const filteredIncome = filteredTransactions.filter(t => t.type === 'income');
+  const filteredExpenses = filteredTransactions.filter(t => t.type === 'expense');
+
+  // ── Navigation ─────────────────────────────────────────────────────────
+  const goToPrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(prev => prev - 1);
+    } else {
+      setSelectedMonth(prev => prev - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(prev => prev + 1);
+    } else {
+      setSelectedMonth(prev => prev + 1);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -61,6 +127,11 @@ const Transactions: React.FC = () => {
     } else {
       addTransaction(transactionData);
     }
+
+    // Auto-navigate to the month of the new transaction
+    const txDate = new Date(formData.date);
+    setSelectedMonth(txDate.getMonth());
+    setSelectedYear(txDate.getFullYear());
 
     resetForm();
   };
@@ -99,11 +170,6 @@ const Transactions: React.FC = () => {
     }
   };
 
-  // Using formatCurrency from utils (already configured for ZAR)
-
-  const filteredIncome = filteredTransactions.filter(t => t.type === 'income');
-  const filteredExpenses = filteredTransactions.filter(t => t.type === 'expense');
-
   return (
     <div className="transactions-page">
       <div className="page-header">
@@ -114,6 +180,58 @@ const Transactions: React.FC = () => {
         >
           {showAddForm ? 'Cancel' : 'Add Transaction'}
         </button>
+      </div>
+
+      {/* ── Month/Year Picker ──────────────────────────────────────────────── */}
+      <div className="tx-month-picker">
+        <button className="month-arrow" onClick={goToPrevMonth} aria-label="Previous month">
+          ‹
+        </button>
+
+        <div className="month-selector-group">
+          {/* Month dropdown */}
+          <select
+            className="month-select"
+            value={selectedMonth}
+            onChange={e => setSelectedMonth(Number(e.target.value))}
+          >
+            {MONTH_NAMES.map((name, idx) => (
+              <option key={idx} value={idx}>{name}</option>
+            ))}
+          </select>
+
+          {/* Year dropdown */}
+          <select
+            className="year-select"
+            value={selectedYear}
+            onChange={e => setSelectedYear(Number(e.target.value))}
+          >
+            {availableYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+        </div>
+
+        <button className="month-arrow" onClick={goToNextMonth} aria-label="Next month">
+          ›
+        </button>
+
+        {/* Quick-jump month chips */}
+        <div className="month-chips">
+          {availablePeriods.slice(0, 6).map(p => (
+            <button
+              key={`${p.year}-${p.month}`}
+              className={`month-chip ${p.year === selectedYear && p.month === selectedMonth ? 'active' : ''}`}
+              onClick={() => {
+                setSelectedYear(p.year);
+                setSelectedMonth(p.month);
+              }}
+            >
+              {MONTH_NAMES[p.month].slice(0, 3)} {p.year}
+              <span className="chip-count">{p.count}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {showAddForm && (
@@ -214,9 +332,10 @@ const Transactions: React.FC = () => {
         </div>
       )}
 
+      {/* ── Summary for Selected Month ──────────────────────────────────────── */}
       <div className="transactions-summary">
         <div className="summary-card">
-          <h3>Total Income</h3>
+          <h3>Income • {MONTH_NAMES[selectedMonth].slice(0, 3)} {selectedYear}</h3>
           <div className="amount positive">
             {formatCurrency(
               filteredIncome.reduce((sum, t) => sum + t.amount, 0)
@@ -224,7 +343,7 @@ const Transactions: React.FC = () => {
           </div>
         </div>
         <div className="summary-card">
-          <h3>Total Expenses</h3>
+          <h3>Expenses • {MONTH_NAMES[selectedMonth].slice(0, 3)} {selectedYear}</h3>
           <div className="amount negative">
             {formatCurrency(
               filteredExpenses.reduce((sum, t) => sum + t.amount, 0)
@@ -246,7 +365,10 @@ const Transactions: React.FC = () => {
       </div>
 
       <div className="transactions-list">
-        <h3>Recent Transactions</h3>
+        <h3>
+          Transactions for {MONTH_NAMES[selectedMonth]} {selectedYear}
+          <span className="tx-count">({filteredTransactions.length})</span>
+        </h3>
         {filteredTransactions.length > 0 ? (
           <div className="table-container">
             <table className="transactions-table">
@@ -308,7 +430,12 @@ const Transactions: React.FC = () => {
           </div>
         ) : (
           <div className="no-data">
-            No transactions found. Add your first transaction to get started!
+            No transactions found for {MONTH_NAMES[selectedMonth]} {selectedYear}.
+            {state.transactions.length > 0 ? (
+              <span> Try selecting a different month above.</span>
+            ) : (
+              <span> Add your first transaction to get started!</span>
+            )}
           </div>
         )}
       </div>

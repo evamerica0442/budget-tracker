@@ -6,6 +6,130 @@
   animation: fadeInUp 0.4s ease-out;
 }
 
+/* ── Month/Year Picker ──────────────────────────────────────────────────── */
+.tx-month-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow);
+  flex-wrap: wrap;
+}
+
+.month-arrow {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  cursor: pointer;
+  font-size: 1.3rem;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.month-arrow:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.month-selector-group {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.month-select,
+.year-select {
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.month-select:focus,
+.year-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.month-select {
+  min-width: 120px;
+}
+
+.year-select {
+  min-width: 80px;
+}
+
+.month-chips {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.month-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.month-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-gradient);
+  color: white;
+}
+
+.month-chip.active {
+  background: var(--accent-gradient);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(233, 69, 96, 0.3);
+}
+
+.chip-count {
+  font-size: 0.65rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 1px 5px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.tx-count {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 0.4rem;
+}
+
 /* ── Form Container ───────────────────────────────────────────────────────── */
 .transaction-form-container {
   background: var(--bg-card);
@@ -191,7 +315,7 @@
   justify-content: center;
 }
 
-/* ── Responsive: Mobile Card View ────────────────────────────────────────── */
+/* ── Responsive: Mobile Card View + Month Picker ───────────────────────── */
 @media (max-width: 768px) {
   .transaction-form-container {
     padding: 1rem;
@@ -259,9 +383,27 @@
     margin-top: 0.3rem;
   }
 
-  /* Keep table min-width normal for desktop */
   .table-container {
     margin: 0;
+  }
+
+  /* Month picker mobile */
+  .tx-month-picker {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .month-selector-group {
+    justify-content: center;
+  }
+
+  .month-chips {
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  .month-arrow {
+    display: none;
   }
 }
 
