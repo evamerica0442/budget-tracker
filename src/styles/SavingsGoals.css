@@ -232,6 +232,176 @@
   }
 }
 
+/* ── Auto-Distribute Surplus Section ───────────────────────────────────── */
+.distribute-section {
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  border-radius: 12px;
+  padding: 1.75rem 2rem;
+  margin-bottom: 2rem;
+  color: #ecf0f1;
+  box-shadow: 0 4px 15px rgba(44, 62, 80, 0.25);
+}
+
+.distribute-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.distribute-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.distribute-title h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.distribute-icon {
+  font-size: 1.5rem;
+}
+
+.distribute-btn {
+  white-space: nowrap;
+}
+
+.distribute-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.distribute-subtitle {
+  font-size: 0.95rem;
+  color: #bdc3c7;
+  margin: 0 0 1.25rem 0;
+}
+
+.distribute-subtitle strong {
+  color: #2ecc71;
+}
+
+.distribute-buckets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.distribute-bucket {
+  background: rgba(255, 255, 255, 0.08);
+  border-left: 4px solid #3498db;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.bucket-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.bucket-icon {
+  font-size: 1.1rem;
+}
+
+.bucket-label {
+  flex: 1;
+  font-weight: 500;
+  color: #ecf0f1;
+}
+
+.bucket-percent {
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+  color: #bdc3c7;
+}
+
+.bucket-amount {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #2ecc71;
+}
+
+.bucket-goal {
+  font-size: 0.8rem;
+}
+
+.bucket-matched {
+  color: #7f8c8d;
+}
+
+.bucket-unmatched {
+  color: #e74c3c;
+  font-style: italic;
+}
+
+.distribute-remainder {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #bdc3c7;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.distribute-remainder strong {
+  color: #f39c12;
+}
+
+.distribute-result {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+}
+
+.distribute-result pre {
+  margin: 0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #bdc3c7;
+  white-space: pre-wrap;
+}
+
+/* Form hint text */
+.form-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: #7f8c8d;
+  line-height: 1.4;
+}
+
+.form-hint em {
+  color: #3498db;
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* Empty state tip */
+.empty-tip {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-top: 0.5rem;
+}
+
 /* Responsiveness */
 @media (max-width: 768px) {
   .net-balance-card {
@@ -241,5 +411,18 @@
   }
   .net-balance-amount {
     align-items: flex-start;
+  }
+
+  .distribute-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .distribute-btn {
+    width: 100%;
+  }
+
+  .distribute-buckets {
+    grid-template-columns: 1fr;
   }
 }

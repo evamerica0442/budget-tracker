@@ -18,8 +18,8 @@ const Confetti: React.FC<{ active: boolean }> = ({ active }) => {
     const colors = ['#f1c40f', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#e67e22'];
     const newParticles = Array.from({ length: 100 }).map((_, i) => ({
       id: i,
-      x: Math.random() * 100, // percentage
-      y: Math.random() * -20 - 10, // start above screen
+      x: Math.random() * 100,
+      y: Math.random() * -20 - 10,
       size: Math.random() * 8 + 5,
       color: colors[Math.floor(Math.random() * colors.length)],
       delay: Math.random() * 3,
@@ -60,6 +60,25 @@ const Confetti: React.FC<{ active: boolean }> = ({ active }) => {
   );
 };
 
+// ─── Distribution Bucket Definitions ─────────────────────────────────────────
+interface DistributionBucket {
+  id: string;
+  label: string;
+  percent: number;
+  color: string;
+  keywords: string[];
+  icon: string;
+}
+
+const DISTRIBUTION_BUCKETS: DistributionBucket[] = [
+  { id: 'emergency',    label: 'Emergency Fund',           percent: 0.50, color: '#e74c3c', keywords: ['emergency'],               icon: '🛡️' },
+  { id: 'medium-term',  label: 'Medium Term Goals',        percent: 0.25, color: '#f39c12', keywords: ['medium', 'mid-term'],       icon: '🏠' },
+  { id: 'short-term',   label: 'Short Term Goals',          percent: 0.15, color: '#3498db', keywords: ['short'],                   icon: '🎯' },
+  { id: 'education',    label: 'Education & Career',        percent: 0.10, color: '#9b59b6', keywords: ['education', 'career', 'course', 'skill', 'training'], icon: '📚' },
+];
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
 const SavingsGoals: React.FC = () => {
   const { state: goalState, addGoal, updateGoal, deleteGoal, contribute } = useSavingsGoal();
   const { state: budgetState } = useBudget();
@@ -68,6 +87,8 @@ const SavingsGoals: React.FC = () => {
   const [actionModal, setActionModal] = useState<{ goalId: string | null; maxAmount: number }>({ goalId: null, maxAmount: 0 });
   const [actionAmount, setActionAmount] = useState('');
   const [triggerConfetti, setTriggerConfetti] = useState(false);
+  const [distributing, setDistributing] = useState(false);
+  const [distributeResult, setDistributeResult] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -99,6 +120,60 @@ const SavingsGoals: React.FC = () => {
     .reduce((sum, t) => sum + t.amount, 0);
 
   const netBalance = totalIncome - totalExpenses;
+
+  // ── Auto-Distribution Logic ────────────────────────────────────────────────
+
+  /** Find the first goal whose name matches one of the bucket's keywords (case-insensitive). */
+  const findGoalForBucket = (bucket: DistributionBucket): SavingsGoal | undefined =>
+    goalState.goals.find(g =>
+      bucket.keywords.some(kw => g.name.toLowerCase().includes(kw))
+    );
+
+  /** Compute the amount that should go to each bucket (truncated to 2 decimals). */
+  const computeDistribution = (): { bucket: DistributionBucket; amount: number; goal?: SavingsGoal }[] => {
+    if (netBalance <= 0) return [];
+
+    return DISTRIBUTION_BUCKETS.map(bucket => ({
+      bucket,
+      amount: Math.floor(netBalance * bucket.percent * 100) / 100,
+      goal: findGoalForBucket(bucket),
+    }));
+  };
+
+  const distribution = computeDistribution();
+  const totalDistributed = distribution.reduce((s, d) => s + d.amount, 0);
+  const surplusAfterDistribute = netBalance - totalDistributed;
+
+  /** Execute the auto-distribution: contribute to all matched goals. */
+  const handleAutoDistribute = async () => {
+    if (netBalance <= 0) return;
+    setDistributing(true);
+    setDistributeResult(null);
+
+    const results: string[] = [];
+
+    for (const item of distribution) {
+      if (!item.goal) {
+        results.push(`❌ ${item.bucket.label}: No matching goal found`);
+        continue;
+      }
+      if (item.amount <= 0) continue;
+
+      try {
+        await contribute(item.goal.id, item.amount);
+        results.push(`✅ ${item.bucket.label}: ${formatCurrency(item.amount)}`);
+      } catch (err) {
+        results.push(`❌ ${item.bucket.label}: Contribution failed`);
+      }
+    }
+
+    setDistributeResult(results.join('\n'));
+    setTriggerConfetti(true);
+    setTimeout(() => setTriggerConfetti(false), 6000);
+    setDistributing(false);
+  };
+
+  // ── Modal Handlers ─────────────────────────────────────────────────────────
 
   const handleOpenModal = (goal?: SavingsGoal) => {
     if (goal) {
@@ -168,7 +243,6 @@ const SavingsGoals: React.FC = () => {
   };
 
   const handleContributeOpen = (goal: SavingsGoal) => {
-    // Earmark up to the net balance or target remaining
     const remaining = goal.targetAmount - goal.currentAmount;
     const maxAvailable = Math.max(0, netBalance);
     setActionModal({ 
@@ -193,7 +267,6 @@ const SavingsGoals: React.FC = () => {
     try {
       await contribute(actionModal.goalId, amount);
       
-      // Check if newly completed
       if (goal.currentAmount + amount >= goal.targetAmount) {
         setTriggerConfetti(true);
         setTimeout(() => setTriggerConfetti(false), 6000);
@@ -242,7 +315,7 @@ const SavingsGoals: React.FC = () => {
         </button>
       </div>
 
-      {/* Net Balance Alert / Earmark Helper */}
+      {/* Net Balance Surplus Card */}
       <div className="net-balance-card">
         <div className="net-balance-info">
           <h3>Monthly Net Balance Available</h3>
@@ -255,6 +328,69 @@ const SavingsGoals: React.FC = () => {
           <span className="label">Available this month</span>
         </div>
       </div>
+
+      {/* ── Auto-Distribute Surplus Section ───────────────────────────────────── */}
+      {netBalance > 0 && (
+        <div className="distribute-section">
+          <div className="distribute-header">
+            <div className="distribute-title">
+              <span className="distribute-icon">⚡</span>
+              <h3>Auto-Distribute Surplus</h3>
+            </div>
+            <button
+              className="btn btn-primary distribute-btn"
+              onClick={handleAutoDistribute}
+              disabled={distributing || distribution.every(d => !d.goal)}
+            >
+              {distributing ? 'Distributing…' : 'Distribute Now'}
+            </button>
+          </div>
+
+          <p className="distribute-subtitle">
+            Your surplus of <strong>{formatCurrency(netBalance)}</strong> will be split automatically across your savings goals as follows:
+          </p>
+
+          <div className="distribute-buckets">
+            {distribution.map(item => {
+              const hasGoal = !!item.goal;
+              return (
+                <div
+                  key={item.bucket.id}
+                  className="distribute-bucket"
+                  style={{ borderLeftColor: item.bucket.color }}
+                >
+                  <div className="bucket-top">
+                    <span className="bucket-icon">{item.bucket.icon}</span>
+                    <span className="bucket-label">{item.bucket.label}</span>
+                    <span className="bucket-percent">{item.bucket.percent * 100}%</span>
+                  </div>
+                  <div className="bucket-amount">{formatCurrency(item.amount)}</div>
+                  <div className="bucket-goal">
+                    {hasGoal ? (
+                      <span className="bucket-matched">→ {item.goal!.name}</span>
+                    ) : (
+                      <span className="bucket-unmatched">No goal found — create one containing "{item.bucket.keywords[0]}" in the name</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {surplusAfterDistribute > 0 && (
+            <div className="distribute-remainder">
+              <span>Remainder (due to rounding):</span>
+              <strong>{formatCurrency(surplusAfterDistribute)}</strong>
+            </div>
+          )}
+
+          {distributeResult && (
+            <div className="distribute-result">
+              <pre>{distributeResult}</pre>
+            </div>
+          )}
+        </div>
+      )}
 
       {goalState.error && (
         <div className="alert alert-warning">
@@ -269,6 +405,9 @@ const SavingsGoals: React.FC = () => {
           <div className="empty-icon">🐷</div>
           <h3>No Savings Goals Yet</h3>
           <p>Whether it's for a holiday, car deposit, or emergency fund, start planning your goals today!</p>
+          <p className="empty-tip">
+            💡 <strong>Pro tip:</strong> Create goals named <em>"Emergency Fund"</em>, <em>"Short Term Goals"</em>, <em>"Medium Term Goals"</em>, and <em>"Education & Career"</em> to use the Auto-Distribute feature.
+          </p>
           <button className="btn btn-primary" onClick={() => handleOpenModal()}>
             Create a Savings Goal
           </button>
@@ -370,6 +509,9 @@ const SavingsGoals: React.FC = () => {
                   required
                   placeholder="e.g., Emergency Fund, Holiday, Car Deposit"
                 />
+                <small className="form-hint">
+                  💡 For Auto-Distribute, name goals with: <em>Emergency</em>, <em>Medium</em>, <em>Short</em>, <em>Education</em> or <em>Career</em>
+                </small>
               </div>
 
               <div className="form-row">
