@@ -115,11 +115,19 @@ const budgetReducer = (state: BudgetState, action: BudgetAction): BudgetState =>
   }
 };
 
+interface DuplicatePayload {
+  sourceYear: number;
+  sourceMonth: number;
+  targetYear: number;
+  targetMonth: number;
+}
+
 interface BudgetContextType {
   state: BudgetState;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
   updateTransaction: (transaction: Transaction) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
+  duplicateTransactions: (payload: DuplicatePayload) => Promise<number>;
   addCategory: (category: Omit<Category, 'id'>) => Promise<void>;
   updateCategory: (category: Category) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
@@ -276,6 +284,50 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const duplicateTransactions = async (payload: DuplicatePayload): Promise<number> => {
+    try {
+      if (state.useOfflineMode) {
+        // Offline mode: find source month transactions and clone them locally
+        const sourceTransactions = state.transactions.filter(t => {
+          const d = new Date(t.date);
+          return d.getMonth() === payload.sourceMonth - 1 && d.getFullYear() === payload.sourceYear;
+        });
+
+        if (sourceTransactions.length === 0) {
+          return 0;
+        }
+
+        const targetDateStart = new Date(payload.targetYear, payload.targetMonth - 1, 1);
+        const lastDayOfTarget = new Date(payload.targetYear, payload.targetMonth, 0).getDate();
+
+        const newTransactions: Transaction[] = sourceTransactions.map(t => {
+          const originalDate = new Date(t.date);
+          const day = originalDate.getDate();
+          const newDate = new Date(targetDateStart);
+          newDate.setDate(Math.min(day, lastDayOfTarget));
+
+          return {
+            ...t,
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            date: newDate.toISOString().split('T')[0],
+          };
+        });
+
+        newTransactions.forEach(t => dispatch({ type: 'ADD_TRANSACTION', payload: t }));
+        return newTransactions.length;
+      } else {
+        const result = await transactionAPI.duplicate(payload);
+        // Refresh transactions list from API to get the full updated data
+        const updatedTransactions = await transactionAPI.getAll();
+        dispatch({ type: 'SET_TRANSACTIONS', payload: updatedTransactions });
+        return result.count;
+      }
+    } catch (error) {
+      console.error('Error duplicating transactions:', error);
+      throw error;
+    }
+  };
+
   const addCategory = async (category: Omit<Category, 'id'>) => {
     try {
       if (state.useOfflineMode) {
@@ -334,6 +386,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addTransaction,
         updateTransaction,
         deleteTransaction,
+        duplicateTransactions,
         addCategory,
         updateCategory,
         deleteCategory,

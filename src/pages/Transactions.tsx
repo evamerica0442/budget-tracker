@@ -18,7 +18,7 @@ const MONTH_NAMES = [
 ];
 
 const Transactions: React.FC = () => {
-  const { state, addTransaction, updateTransaction, deleteTransaction } = useBudget();
+  const { state, addTransaction, updateTransaction, deleteTransaction, duplicateTransactions } = useBudget();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<string | null>(null);
   const [formData, setFormData] = useState<TransactionFormData>({
@@ -28,6 +28,20 @@ const Transactions: React.FC = () => {
     category: '',
     date: new Date().toISOString().split('T')[0]
   });
+
+  // ── Duplicate state ────────────────────────────────────────────────────
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [duplicateTargetMonth, setDuplicateTargetMonth] = useState<number>(() => {
+    const next = new Date();
+    next.setMonth(next.getMonth() + 1);
+    return next.getMonth();
+  });
+  const [duplicateTargetYear, setDuplicateTargetYear] = useState<number>(() => {
+    const next = new Date();
+    next.setMonth(next.getMonth() + 1);
+    return next.getFullYear();
+  });
+  const [duplicating, setDuplicating] = useState(false);
 
   // ── Month/Year filter state ────────────────────────────────────────────
   const now = new Date();
@@ -170,17 +184,130 @@ const Transactions: React.FC = () => {
     }
   };
 
+  // ── Duplicate handler ──────────────────────────────────────────────────
+  const handleDuplicate = async () => {
+    if (duplicating) return;
+
+    const sourceMonth = selectedMonth + 1; // convert 0-based to 1-based
+    const sourceYear = selectedYear;
+
+    if (sourceYear === duplicateTargetYear && sourceMonth === duplicateTargetMonth) {
+      alert('Source and target months must be different.');
+      return;
+    }
+
+    const confirmMsg = `Duplicate all transactions from ${MONTH_NAMES[selectedMonth]} ${selectedYear} to ${MONTH_NAMES[duplicateTargetMonth]} ${duplicateTargetYear}?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setDuplicating(true);
+    try {
+      const count = await duplicateTransactions({
+        sourceYear,
+        sourceMonth,
+        targetYear: duplicateTargetYear,
+        targetMonth: duplicateTargetMonth + 1, // convert 0-based to 1-based
+      });
+      alert(`Successfully duplicated ${count} transaction(s) to ${MONTH_NAMES[duplicateTargetMonth]} ${duplicateTargetYear}.`);
+      setShowDuplicateDialog(false);
+      // Navigate to target month
+      setSelectedYear(duplicateTargetYear);
+      setSelectedMonth(duplicateTargetMonth);
+    } catch (err: any) {
+      alert(`Failed to duplicate transactions: ${err.message}`);
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
+  const openDuplicateDialog = () => {
+    // Default target to next month
+    const next = new Date(selectedYear, selectedMonth + 1);
+    setDuplicateTargetMonth(next.getMonth());
+    setDuplicateTargetYear(next.getFullYear());
+    setShowDuplicateDialog(true);
+  };
+
   return (
     <div className="transactions-page">
       <div className="page-header">
         <h2>Transaction Management</h2>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowAddForm(!showAddForm)}
-        >
-          {showAddForm ? 'Cancel' : 'Add Transaction'}
-        </button>
+        <div className="page-header-actions">
+          <button 
+            className="btn btn-secondary"
+            onClick={openDuplicateDialog}
+            disabled={filteredTransactions.length === 0}
+            title={filteredTransactions.length === 0 ? 'No transactions to duplicate in the current month' : 'Duplicate this month to another month'}
+          >
+            📋 Duplicate Month
+          </button>
+          <button 
+            className="btn btn-primary"
+            onClick={() => setShowAddForm(!showAddForm)}
+          >
+            {showAddForm ? 'Cancel' : 'Add Transaction'}
+          </button>
+        </div>
       </div>
+
+      {/* ── Duplicate Dialog ──────────────────────────────────────────────── */}
+      {showDuplicateDialog && (
+        <div className="transaction-form-container">
+          <div className="form-header">
+            <h3>Duplicate {MONTH_NAMES[selectedMonth]} {selectedYear} to...</h3>
+            <button className="close-btn" onClick={() => setShowDuplicateDialog(false)}>&times;</button>
+          </div>
+          <div className="duplicate-form">
+            <p className="duplicate-info">
+              This will copy all <strong>{filteredTransactions.length}</strong> transaction(s) from{' '}
+              <strong>{MONTH_NAMES[selectedMonth]} {selectedYear}</strong> to:
+            </p>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="dupMonth">Target Month</label>
+                <select
+                  id="dupMonth"
+                  value={duplicateTargetMonth}
+                  onChange={e => setDuplicateTargetMonth(Number(e.target.value))}
+                >
+                  {MONTH_NAMES.map((name, idx) => (
+                    <option key={idx} value={idx}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="dupYear">Target Year</label>
+                <select
+                  id="dupYear"
+                  value={duplicateTargetYear}
+                  onChange={e => setDuplicateTargetYear(Number(e.target.value))}
+                >
+                  {[...Array(10)].map((_, i) => {
+                    const year = now.getFullYear() - 2 + i;
+                    return (
+                      <option key={year} value={year}>{year}</option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+            <div className="form-actions">
+              <button
+                className="btn btn-primary"
+                onClick={handleDuplicate}
+                disabled={duplicating}
+              >
+                {duplicating ? 'Duplicating...' : 'Duplicate Transactions'}
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowDuplicateDialog(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Month/Year Picker ──────────────────────────────────────────────── */}
       <div className="tx-month-picker">

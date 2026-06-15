@@ -77,6 +77,18 @@ export const transactionAPI = {
   delete: (id: string): Promise<void> => apiCall(`/transactions/${id}`, {
     method: 'DELETE',
   }),
+
+  // Duplicate transactions from one month to another
+  duplicate: (data: {
+    sourceYear: number;
+    sourceMonth: number;
+    targetYear: number;
+    targetMonth: number;
+  }): Promise<{ message: string; count: number; transactions: Transaction[] }> =>
+    apiCall('/transactions/duplicate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 /**

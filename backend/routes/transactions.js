@@ -194,6 +194,81 @@ router.delete('/:id', async (req, res, next) => {
   }
 });
 
+// Duplicate transactions from one month to another
+router.post('/duplicate', async (req, res, next) => {
+  try {
+    const { sourceYear, sourceMonth, targetYear, targetMonth } = req.body;
+
+    if (sourceYear === undefined || sourceMonth === undefined || targetYear === undefined || targetMonth === undefined) {
+      return res.status(400).json({ error: 'Missing required fields: sourceYear, sourceMonth, targetYear, targetMonth' });
+    }
+
+    // Calculate date range for source month
+    const sourceStart = new Date(sourceYear, sourceMonth - 1, 1);
+    const sourceEnd = new Date(sourceYear, sourceMonth, 0, 23, 59, 59);
+
+    // Fetch transactions from source month
+    const snapshot = await db
+      .collection('users')
+      .doc(req.userId)
+      .collection('transactions')
+      .where('date', '>=', sourceStart.toISOString())
+      .where('date', '<=', sourceEnd.toISOString())
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ error: 'No transactions found in the source month', count: 0 });
+    }
+
+    // Create batch to write all duplicated transactions
+    const batch = db.batch();
+    const userTransactionsRef = db.collection('users').doc(req.userId).collection('transactions');
+
+    const duplicated = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+
+      // Calculate the day of month from original date
+      const originalDate = new Date(data.date);
+      const day = originalDate.getDate();
+
+      // Create new date in target month (clamp to last day of target month if needed)
+      const targetDate = new Date(targetYear, targetMonth - 1, 1);
+      const lastDayOfTargetMonth = new Date(targetYear, targetMonth, 0).getDate();
+      targetDate.setDate(Math.min(day, lastDayOfTargetMonth));
+
+      const newDocRef = userTransactionsRef.doc();
+      batch.set(newDocRef, {
+        type: data.type,
+        amount: data.amount,
+        description: data.description,
+        category: data.category,
+        date: targetDate.toISOString(),
+        createdAt: new Date().toISOString()
+      });
+
+      duplicated.push({
+        id: newDocRef.id,
+        type: data.type,
+        amount: data.amount,
+        description: data.description,
+        category: data.category,
+        date: targetDate.toISOString()
+      });
+    });
+
+    await batch.commit();
+
+    res.status(201).json({
+      message: `Duplicated ${duplicated.length} transactions from ${sourceYear}-${sourceMonth} to ${targetYear}-${targetMonth}`,
+      count: duplicated.length,
+      transactions: duplicated
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Bulk create transactions
 router.post('/bulk/import', async (req, res, next) => {
   try {
