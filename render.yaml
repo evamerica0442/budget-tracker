@@ -17,6 +17,11 @@ services:
         value: "5000"
       - key: FIREBASE_SERVICE_ACCOUNT_KEY
         sync: false
+      # MongoDB for scheduled payments (optional — app degrades gracefully)
+      # Use MongoDB Atlas: https://www.mongodb.com/atlas (free tier available)
+      # Get your connection string from Atlas → Connect → Drivers
+      - key: MONGODB_URI
+        sync: false
     
     # Health check
     healthCheckPath: /api/health

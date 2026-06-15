@@ -5,12 +5,14 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import './config/firebase.js'; // Initialize Firebase
+import { connectDatabase } from './config/database.js';
 import transactionRoutes from './routes/transactions.js';
 import categoryRoutes from './routes/categories.js';
 import authRoutes from './routes/auth.js';
 import envelopeRoutes from './routes/envelopes.js';
 import savingsGoalRoutes from './routes/savingsGoals.js';
 import aiRoutes from './routes/ai.js';
+import scheduledPaymentRoutes from './routes/scheduled-payments.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import auth from './middleware/auth.js';
 
@@ -92,6 +94,7 @@ app.use('/api/categories', auth, categoryRoutes);
 app.use('/api/envelopes', auth, envelopeRoutes);
 app.use('/api/savings-goals', auth, savingsGoalRoutes);
 app.use('/api/ai', auth, aiRoutes);
+app.use('/api/scheduled-payments', auth, scheduledPaymentRoutes);
 
 // Serve static files from the React app build folder
 app.use(express.static(buildPath));
@@ -116,10 +119,17 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // Start server
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   console.log(`✅ Server listening on port ${PORT}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🔍 Diagnostics: http://localhost:${PORT}/api/diagnostics`);
+
+  // Connect to MongoDB for scheduled payments
+  try {
+    await connectDatabase();
+  } catch (err) {
+    console.warn('⚠️  MongoDB not available — scheduled payments will be unavailable');
+  }
 });
 
 // Handle uncaught errors

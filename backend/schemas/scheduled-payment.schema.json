@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://budget-tracker.app/schemas/scheduled-payment.json",
+  "title": "Scheduled Payment",
+  "description": "A planned recurring payment tracked for budgeting, reminders, and bank reconciliation. This app does NOT execute payments — only banks can process actual transfers.",
+  "type": "object",
+  "required": ["name", "amount", "frequency", "due_date", "category"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique UUID v4 identifier",
+      "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "readOnly": true
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable label for the payment",
+      "minLength": 1,
+      "maxLength": 128,
+      "examples": ["Old Mutual RA", "Momentum Medical Aid", "Eskom Prepaid"]
+    },
+    "amount": {
+      "type": "number",
+      "description": "Payment amount in ZAR",
+      "minimum": 0,
+      "exclusiveMinimum": true,
+      "examples": [4500.0, 1899.0]
+    },
+    "currency": {
+      "type": "string",
+      "description": "ISO 4217 currency code",
+      "default": "ZAR",
+      "enum": ["ZAR", "USD", "GBP", "EUR"]
+    },
+    "frequency": {
+      "type": "string",
+      "description": "Payment recurrence frequency",
+      "enum": ["once", "daily", "weekly", "biweekly", "monthly", "quarterly", "biannually", "annually"]
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Next due date (ISO 8601 YYYY-MM-DD). Advances after reconciliation."
+    },
+    "end_date": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Optional end date for finite recurring payments",
+      "default": null
+    },
+    "category": {
+      "type": "string",
+      "description": "Budget category for reporting",
+      "enum": [
+        "housing", "utilities", "insurance", "medical_aid",
+        "retirement_annuity", "investments", "savings", "debt_repayment",
+        "subscriptions", "education", "transport", "food", "entertainment", "other"
+      ]
+    },
+    "linked_account": {
+      "type": "string",
+      "description": "Reference to the linked bank account",
+      "default": ""
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle state",
+      "enum": ["active", "paused", "completed", "cancelled", "archived"],
+      "default": "active"
+    },
+    "reminders": {
+      "type": "object",
+      "description": "Reminder configuration",
+      "properties": {
+        "days_before": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 },
+          "default": [7, 3, 1]
+        },
+        "channels": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["email", "push", "sms"] },
+          "default": ["email"]
+        },
+        "missed_alert": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "reconciliation": {
+      "type": "object",
+      "description": "Rules for auto-matching against imported bank transactions",
+      "properties": {
+        "match_strategy": {
+          "type": "string",
+          "enum": ["description_contains", "description_exact", "amount_match", "description_and_amount"],
+          "default": "description_and_amount"
+        },
+        "match_text": {
+          "type": "string",
+          "default": ""
+        },
+        "amount_tolerance": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0
+        },
+        "reconciled_transaction_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "last_reconciled_date": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "default": null
+        }
+      }
+    },
+    "personal_data_consent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "POPIA: Timestamp of data processing consent"
+    },
+    "user": {
+      "type": "string",
+      "description": "Firebase/Firestore user ID"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "readOnly": true
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "readOnly": true
+    }
+  }
+}
