@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { useBudget } from '../context/BudgetContext';
 import { useAuth } from '../context/AuthContext';
-import { formatCurrency } from '../utils/formatting';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -90,7 +88,6 @@ const IconSearch = () => (
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const { theme, toggleTheme } = useTheme();
-  const { state } = useBudget();
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();

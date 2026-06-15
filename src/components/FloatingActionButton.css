@@ -1,0 +1,99 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLOATING ACTION BUTTON — WealthWise Premium FAB
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.fab {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  border: none;
+  background: var(--accent-gradient);
+  color: #0a1628;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 24px rgba(212, 168, 83, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 90;
+  animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme="light"] .fab {
+  color: #ffffff;
+  box-shadow: 0 4px 24px rgba(184, 134, 11, 0.3), 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.fab:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 32px rgba(212, 168, 83, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.fab:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.fab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s;
+}
+
+.fab:hover .fab-icon {
+  transform: rotate(90deg);
+}
+
+.fab-label {
+  position: absolute;
+  right: calc(100% + 12px);
+  white-space: nowrap;
+  background: var(--bg-card);
+  color: var(--text);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(8px);
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fab:hover .fab-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Pulse ring animation ─────────────────────────────────────────────────── */
+.fab::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 20px;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  animation: fab-ring 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes fab-ring {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(1.08); }
+}
+
+/* ── Mobile bottom positioning ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .fab {
+    bottom: 5.5rem;
+    right: 1.25rem;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+  }
+}
