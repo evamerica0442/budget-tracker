@@ -1,154 +1,18 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   ENVELOPES — Modern Envelope Budgeting
-   ═══════════════════════════════════════════════════════════════════════════ */
+.envelopes-page { animation: fadeInUp 0.5s ease-out; }
 
-.envelopes-page {
-  animation: fadeInUp 0.4s ease-out;
-}
-
-/* ── Alerts ──────────────────────────────────────────────────────────────── */
-.alert-warning {
-  background: var(--warning-bg);
-  color: var(--warning);
-  border: 1px solid rgba(245, 158, 11, 0.2);
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-bottom: 1.25rem;
-}
-
-/* ── Envelopes Grid ──────────────────────────────────────────────────────── */
 .envelopes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
 }
 
 .envelope-card {
   background: var(--bg-card);
   border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
   border: 1px solid var(--border);
-  border-left: 4px solid #3498db;
-  padding: 1.25rem;
   box-shadow: var(--shadow);
   transition: all var(--transition);
 }
 
-.envelope-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.envelope-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.envelope-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.envelope-actions {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.envelope-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.envelope-amounts {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.amount-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.amount-item .label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.amount-item .value {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.envelope-meta {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.envelope-meta .badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.55rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  border-radius: 20px;
-  background: var(--bg-input);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.envelope-meta .badge.category {
-  background: var(--info-bg);
-  color: var(--info);
-}
-
-.progress-text {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.envelope-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.envelope-buttons .btn {
-  flex: 1;
-  min-width: 0;
-  font-size: 0.78rem;
-}
-
-/* ── Responsive ──────────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .envelopes-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .envelope-card {
-    padding: 1rem;
-  }
-
-  .envelope-buttons {
-    flex-direction: column;
-  }
-
-  .envelope-buttons .btn {
-    width: 100%;
-  }
-}
+.envelope-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
