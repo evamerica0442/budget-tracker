@@ -12,6 +12,7 @@ import Categories from './pages/Categories';
 import Envelopes from './pages/Envelopes';
 import SavingsGoals from './pages/SavingsGoals';
 import CashFlowSimulation from './pages/CashFlowSimulation';
+import ScheduledPayments from './pages/ScheduledPayments';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -72,6 +73,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <SavingsGoals />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/scheduled-payments"
+                    element={
+                      <ProtectedRoute>
+                        <ScheduledPayments />
                       </ProtectedRoute>
                     }
                   />

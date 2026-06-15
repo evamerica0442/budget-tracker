@@ -18,6 +18,7 @@ const navItems: NavItem[] = [
   { path: '/categories', label: 'Categories', icon: '🏷️' },
   { path: '/envelopes', label: 'Envelopes', icon: '💰' },
   { path: '/savings', label: 'Savings', icon: '🎯' },
+  { path: '/scheduled-payments', label: 'Scheduled', icon: '📅' },
   { path: '/simulation', label: 'Simulation', icon: '📈' },
 ];
 
