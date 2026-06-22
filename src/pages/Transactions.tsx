@@ -44,9 +44,10 @@ const Transactions: React.FC = () => {
   const [duplicating, setDuplicating] = useState(false);
 
   // ── Month/Year filter state ────────────────────────────────────────────
-  const now = new Date();
-  const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth());
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth();
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
 
   // ── Derive available years and months from transactions ────────────────
   const availablePeriods = useMemo(() => {
@@ -71,10 +72,12 @@ const Transactions: React.FC = () => {
   const availableYears = useMemo(() => {
     const years = new Set<number>();
     state.transactions.forEach(t => years.add(new Date(t.date).getFullYear()));
+    const thisYear = new Date().getFullYear();
     const sorted = Array.from(years).sort((a, b) => b - a);
-    if (!sorted.includes(now.getFullYear())) sorted.unshift(now.getFullYear());
+    if (!sorted.includes(thisYear)) sorted.unshift(thisYear);
     return sorted;
-  }, [state.transactions, now]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.transactions]);
 
   // ── Filter transactions by selected month/year ─────────────────────────
   const filteredTransactions = useMemo(() => {
@@ -282,7 +285,7 @@ const Transactions: React.FC = () => {
                   onChange={e => setDuplicateTargetYear(Number(e.target.value))}
                 >
                   {[...Array(10)].map((_, i) => {
-                    const year = now.getFullYear() - 2 + i;
+                    const year = new Date().getFullYear() - 2 + i;
                     return (
                       <option key={year} value={year}>{year}</option>
                     );

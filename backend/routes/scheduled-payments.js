@@ -102,6 +102,46 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+// ── Reconciliation report ──────────────────────────────────────────────────
+
+/**
+ * GET /api/scheduled-payments/reconciliation/summary
+ * Returns a summary of reconciliation status for all active payments.
+ * IMPORTANT: Must be placed before `/:id` route to avoid Express matching "reconciliation" as an ID.
+ */
+router.get('/reconciliation/summary', async (req, res, next) => {
+  try {
+    const payments = await ScheduledPayment.find({
+      user: req.userId,
+      status: { $in: ['active', 'paused'] },
+    }).lean();
+
+    const summary = payments.map((p) => ({
+      id: p.id,
+      name: p.name,
+      amount: p.amount,
+      frequency: p.frequency,
+      dueDate: p.due_date,
+      status: p.status,
+      daysUntilDue: Math.ceil(
+        (new Date(p.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      ),
+      reconciled: p.reconciliation?.reconciled_transaction_ids?.length || 0,
+      lastReconciled: p.reconciliation?.last_reconciled_date || null,
+      isOverdue: new Date(p.due_date) < new Date(),
+    }));
+
+    res.json({
+      total: summary.length,
+      overdue: summary.filter((s) => s.isOverdue).length,
+      reconciled: summary.filter((s) => s.reconciled > 0).length,
+      payments: summary,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── CRUD: Get Single ───────────────────────────────────────────────────────
 
 /**
@@ -387,45 +427,6 @@ router.post('/:id/remind', async (req, res, next) => {
     const ctx = buildUserContext(req);
     const result = await triggerManualReminder(req.params.id, ctx);
     res.json(result);
-  } catch (err) {
-    next(err);
-  }
-});
-
-// ── Reconciliation report ──────────────────────────────────────────────────
-
-/**
- * GET /api/scheduled-payments/reconciliation/summary
- * Returns a summary of reconciliation status for all active payments.
- */
-router.get('/reconciliation/summary', async (req, res, next) => {
-  try {
-    const payments = await ScheduledPayment.find({
-      user: req.userId,
-      status: { $in: ['active', 'paused'] },
-    }).lean();
-
-    const summary = payments.map((p) => ({
-      id: p.id,
-      name: p.name,
-      amount: p.amount,
-      frequency: p.frequency,
-      dueDate: p.due_date,
-      status: p.status,
-      daysUntilDue: Math.ceil(
-        (new Date(p.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-      ),
-      reconciled: p.reconciliation?.reconciled_transaction_ids?.length || 0,
-      lastReconciled: p.reconciliation?.last_reconciled_date || null,
-      isOverdue: new Date(p.due_date) < new Date(),
-    }));
-
-    res.json({
-      total: summary.length,
-      overdue: summary.filter((s) => s.isOverdue).length,
-      reconciled: summary.filter((s) => s.reconciled > 0).length,
-      payments: summary,
-    });
   } catch (err) {
     next(err);
   }
